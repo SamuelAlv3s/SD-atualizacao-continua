@@ -1,11 +1,6 @@
 const http = require("http");
 const fs = require("fs");
-const {
-  updateAcoes,
-  incrementarAtualizacao,
-  getAtualizacao,
-  atualizarReplicas,
-} = require("./utils");
+const { atualizarAcoes, atualizarReplicas } = require("./utils");
 
 const file_path = "./precos.txt";
 
@@ -13,17 +8,18 @@ function read_file() {
   return fs.readFileSync(file_path, "utf-8");
 }
 
+let atualizacao = 0;
+const x = 3;
+
 const server = http.createServer((req, res) => {
   if (req.url === "/precos") {
-    incrementarAtualizacao();
-    const atualizacao = getAtualizacao();
+    atualizacao++;
     console.log("Atualização: " + atualizacao);
 
-    if (atualizacao >= 2) {
-      updateAcoes();
-    }
+    atualizarAcoes();
 
-    if (atualizacao >= 3) {
+    if (atualizacao >= x) {
+      atualizacao = 0;
       atualizarReplicas();
     }
 
@@ -32,6 +28,7 @@ const server = http.createServer((req, res) => {
 
     res.end(preco_data);
   } else {
+    console.log(req.url);
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("404 Not Found");
   }

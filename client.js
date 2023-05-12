@@ -4,6 +4,10 @@ const readline = require("readline");
 
 const file_path = "./resultados";
 
+// const host_replica_1 = "172.20.10.11";
+const host_replica_1 = "localhost";
+const host_replica_2 = "localhost";
+
 function save_file(data, prefix) {
   const date = new Date();
   const hourMinuteSecond = date.toLocaleTimeString("pt-BR").replace(/:/g, "-");
@@ -14,9 +18,9 @@ function save_file(data, prefix) {
   fs.writeFileSync(`${file_path}/${prefix}-${hourMinuteSecond}.txt`, data);
 }
 
-function getPrecos(port) {
+function getPrecos(host, port) {
   http
-    .get(`http://localhost:${port}/precos`, (res) => {
+    .get(`http://${host}:${port}/precos`, (res) => {
       let preco_data = "";
 
       res.on("data", (chunk) => {
@@ -39,17 +43,17 @@ const rl = readline.createInterface({
 });
 
 rl.question(
-  "Escolha o servidor/réplica:  (0 = Servidor), (1, 2 = Réplicas)",
+  "Escolha o servidor/réplica(s) - (0 = Servidor), (1, 2 = Réplicas): ",
   (answer) => {
     switch (answer) {
       case "0":
-        getPrecos(3000);
+        getPrecos("localhost", 3000);
         break;
       case "1":
-        getPrecos(3001);
+        getPrecos(host_replica_1, 3001);
         break;
       case "2":
-        getPrecos(3002);
+        getPrecos(host_replica_2, 3002);
         break;
       default:
         console.log("Opção inválida");
@@ -58,13 +62,3 @@ rl.question(
     rl.close();
   }
 );
-
-// getPrecos(3000);
-
-// setTimeout(() => {
-//   getPrecos(3001);
-// }, 2000);
-
-// setTimeout(() => {
-//   getPrecos(3002);
-// }, 4000);

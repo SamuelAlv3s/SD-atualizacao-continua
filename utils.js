@@ -1,47 +1,67 @@
 const fs = require("fs");
-const file_path_count = "./atualizacoes.json";
-const file_path = "./precos.txt";
-const file_path_replica01 = "./replica01/precos.txt";
+const http = require("http");
 
-function updateAcoes() {
+const file_path = "./precos.txt";
+
+const host_replica_1 = "localhost";
+const host_replica_2 = "localhost";
+
+function atualizarAcoes() {
   const novaAcao = `Ação ${Math.floor(Math.random() * 100)} = ${Math.floor(
     Math.random() * 100
   )}`;
 
   fs.appendFileSync(file_path, `\n${novaAcao}`);
-  fs.copyFileSync(file_path, file_path_replica01);
 
   console.log("Ações atualizadas");
 }
 
-function getAtualizacao() {
-  const atualizacoesFile = fs.readFileSync(file_path_count, "utf-8");
-  const count = JSON.parse(atualizacoesFile).count;
-  return count;
-}
-
-function incrementarAtualizacao() {
-  const countAtual = getAtualizacao();
-  const count = countAtual + 1;
-  const data = { count };
-  fs.writeFileSync(file_path_count, JSON.stringify(data, null, 2));
-}
-
-function zerarAtualizacao() {
-  const count = 0;
-  const data = { count };
-  fs.writeFileSync(file_path_count, JSON.stringify(data, null, 2));
-}
-
 function atualizarReplicas() {
-  zerarAtualizacao();
-  fs.copyFileSync(file_path, "./replica01/precos.txt");
-  fs.copyFileSync(file_path, "./replica02/precos.txt");
+  // fs.copyFileSync(file_path, "./replica01/precos.txt");
+  // fs.copyFileSync(file_path, "./replica02/precos.txt");
+
+  const preco_data = fs.readFileSync(file_path, "utf-8");
+
+  http
+    .request(
+      {
+        host: host_replica_1,
+        port: 3001,
+        path: "/atualizarPrecos",
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      },
+      (res) => {
+        res.on("data", (chunk) => {
+          // console.log(`BODY: ${chunk}`);
+        });
+      }
+    )
+    .end(preco_data);
+
+  http
+    .request(
+      {
+        host: host_replica_2,
+        port: 3002,
+        path: "/atualizarPrecos",
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      },
+      (res) => {
+        res.on("data", (chunk) => {
+          // console.log(`BODY: ${chunk}`);
+        });
+      }
+    )
+    .end(preco_data);
 }
 
 module.exports = {
-  updateAcoes,
-  getAtualizacao,
-  incrementarAtualizacao,
+  atualizarAcoes,
   atualizarReplicas,
 };
